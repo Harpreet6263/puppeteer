@@ -26,12 +26,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . .
 
-# ✅ Install Puppeteer with bundled Chromium
+# Install dependencies (this will download Chromium)
 RUN npm install --omit=dev
 
-# ✅ Ensure Chromium can run in headless mode
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
-ENV PUPPETEER_EXECUTABLE_PATH=/app/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome
+# ✅ DO NOT SET ANY `PUPPETEER_EXECUTABLE_PATH`!
+# ✅ Chromium path will be auto-detected
 
-# Start server
+# Start the server
 CMD ["node", "index.js"]
