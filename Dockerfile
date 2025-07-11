@@ -22,8 +22,7 @@ RUN apt-get update && apt-get install -y \
   wget \
   && rm -rf /var/lib/apt/lists/*
 
-# Set environment for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 
 # Create app directory
 WORKDIR /app
