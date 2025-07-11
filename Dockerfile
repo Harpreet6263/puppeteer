@@ -1,9 +1,9 @@
-# Use Node.js with Puppeteer
 FROM node:20-slim
 
-# Install necessary dependencies for Chromium
+# Install Chromium dependencies
 RUN apt-get update && apt-get install -y \
-  chromium \
+  wget \
+  ca-certificates \
   fonts-liberation \
   libasound2 \
   libatk-bridge2.0-0 \
@@ -19,17 +19,19 @@ RUN apt-get update && apt-get install -y \
   libxdamage1 \
   libxrandr2 \
   xdg-utils \
-  wget \
-  && rm -rf /var/lib/apt/lists/*
+  --no-install-recommends && \
+  rm -rf /var/lib/apt/lists/*
 
-
-
-# Create app directory
+# Set working directory
 WORKDIR /app
 COPY . .
 
-# Install dependencies
-RUN npm install
+# ✅ Install Puppeteer with bundled Chromium
+RUN npm install --omit=dev
 
-# Start the server
+# ✅ Ensure Chromium can run in headless mode
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false
+ENV PUPPETEER_EXECUTABLE_PATH=/app/node_modules/puppeteer/.local-chromium/linux-*/chrome-linux/chrome
+
+# Start server
 CMD ["node", "index.js"]
