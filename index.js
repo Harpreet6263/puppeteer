@@ -45,6 +45,9 @@ app.get("/", async (req, res) => {
     });
 
     await page.goto("https://www.allpanelexch.com", { waitUntil: "networkidle2" });
+    await page.screenshot({ path: "page.png" });
+    console.log("📸 Screenshot taken");
+
     console.log("✅ Watching site in background");
 
     res.send("✅ Puppeteer is monitoring allpanelexch.com");
