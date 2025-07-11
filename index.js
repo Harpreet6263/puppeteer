@@ -18,7 +18,7 @@ app.get("/", async (req, res) => {
 
   const page = await browser.newPage();
 
-  // Load cookies
+  // ✅ Load cookies
   const cookiesPath = path.join(__dirname, "cookies.json");
   if (fs.existsSync(cookiesPath)) {
     const cookies = JSON.parse(fs.readFileSync(cookiesPath, "utf-8"));
@@ -26,46 +26,55 @@ app.get("/", async (req, res) => {
     console.log("🍪 Cookies loaded");
   }
 
-  // Intercept network requests
-  await page.setRequestInterception(true);
-  page.on("request", async (reqIntercept) => {
-    const url = reqIntercept.url();
-    const method = reqIntercept.method();
+  // ✅ Open target site (before setting localStorage)
+  await page.goto("https://www.allpanelexch.com", { waitUntil: "domcontentloaded" });
 
-    console.log("🌐 Watching:", url);
-
-    if (url.includes("/api/front/placebet") && method === "POST") {
-      const postData = reqIntercept.postData();
-      console.log("🔥 Intercepted /placebet:", postData);
-
-      // Optional: forward it to your backend
-      try {
-        await axios.post(
-          process.env.BACKEND_URL || "https://your-backend.com/api/receive-bet",
-          { data: postData }
-        );
-        console.log("📨 Forwarded to backend");
-      } catch (err) {
-        console.error("❌ Failed to forward:", err.message);
-      }
-    }
-
-    reqIntercept.continue();
+  // ✅ Set localStorage for session
+  await page.evaluate(() => {
+    localStorage.setItem("_grecaptcha", "09ANMylNAw_96FCSUYbykdxQcjra2B1sMy66Os45Cfx48ytrQEHL-9ZOXaEipq0Uq9VD4vSCv5B_68Y7CYARhEJVo5ZvkCgYA03DkyRCKzzotmkrutIUpOP3jRio-f9rdl");
+    localStorage.setItem("clientAddr", "223.178.213.219");
+    localStorage.setItem("persist:root", "{\"token\":\"\\\"5389a91a-9ab6-4cd0-a1ad-cbe255e07af6\\\"\",\"logedIn\":\"true\",\"rulesLogin\":\"false\",\"popUpLogin\":\"false\",\"data\":\"{\\\"uname\\\":\\\"Demo\\\",\\\"bal\\\":1500,\\\"exp\\\":0,\\\"bcode\\\":\\\"75108921047\\\",\\\"isDemoUser\\\":true}\",\"_persist\":\"{\\\"version\\\":-1,\\\"rehydrated\\\":true}\"}");
   });
 
-  // Open target site
-  await page.goto("https://www.allpanelexch.com", { waitUntil: "networkidle2" });
+  // ✅ Reload for localStorage to apply
+  await page.reload({ waitUntil: "networkidle2" });
   console.log("✅ Page loaded");
 
-  // Screenshot to verify login
+  // ✅ Screenshot to confirm login
   const screenshotPath = path.join(__dirname, "screenshots", "page.png");
   fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
   await page.screenshot({ path: screenshotPath });
   console.log("📸 Screenshot saved");
 
-  res.send("✅ Puppeteer running. View: /screenshots/page.png");
+  // ✅ Response to user
+  res.send("✅ Puppeteer running. View screenshot at: <a href='/screenshots/page.png' target='_blank'>/screenshots/page.png</a>");
 
-  // Keep watching for 10 minutes
+  // ✅ Intercept requests
+  await page.setRequestInterception(true);
+
+  page.on("request", async (reqIntercept) => {
+    const url = reqIntercept.url();
+    const method = reqIntercept.method();
+
+    if (url.includes("/api/front/placebet") && method === "POST") {
+      const postData = reqIntercept.postData();
+      console.log("🔥 Intercepted /placebet:", postData);
+
+      // try {
+      //   await axios.post(
+      //     process.env.BACKEND_URL || "http://localhost:4000/api/receive-bet",
+      //     { data: postData }
+      //   );
+      //   console.log("📨 Forwarded to backend");
+      // } catch (err) {
+      //   console.error("❌ Failed to forward:", err.message);
+      // }
+    }
+
+    reqIntercept.continue();
+  });
+
+  // ✅ Close browser after 10 min
   setTimeout(() => {
     browser.close();
     console.log("🛑 Puppeteer closed");
