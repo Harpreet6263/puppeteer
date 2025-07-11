@@ -1,7 +1,8 @@
 FROM node:20-slim
 
-# Install system dependencies for Chromium
+# Install Chromium dependencies
 RUN apt-get update && apt-get install -y \
+  wget \
   ca-certificates \
   fonts-liberation \
   libasound2 \
@@ -17,17 +18,13 @@ RUN apt-get update && apt-get install -y \
   libxcomposite1 \
   libxdamage1 \
   libxrandr2 \
-  wget \
   xdg-utils \
   --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
 
-# Set app dir
 WORKDIR /app
 COPY . .
 
-# ❗Install Puppeteer with Chromium
 RUN npm install
 
-# Start the app
 CMD ["node", "index.js"]
