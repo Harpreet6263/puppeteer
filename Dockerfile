@@ -2,8 +2,7 @@ FROM node:20-slim
 
 # Install Chromium dependencies
 RUN apt-get update && apt-get install -y \
-  wget \
-  ca-certificates \
+  chromium \
   fonts-liberation \
   libasound2 \
   libatk-bridge2.0-0 \
@@ -19,6 +18,7 @@ RUN apt-get update && apt-get install -y \
   libxdamage1 \
   libxrandr2 \
   xdg-utils \
+  wget \
   --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
 
@@ -26,11 +26,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY . .
 
-# Install dependencies (this will download Chromium)
-RUN npm install --omit=dev
+# Install dependencies
+RUN npm install
 
-# ✅ DO NOT SET ANY `PUPPETEER_EXECUTABLE_PATH`!
-# ✅ Chromium path will be auto-detected
+# Expose port
+EXPOSE 3000
 
-# Start the server
+# Start the app
 CMD ["node", "index.js"]
