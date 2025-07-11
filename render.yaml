@@ -1,0 +1,6 @@
+services:
+  - type: worker
+    name: puppeteer-api-monitor
+    runtime: docker
+    region: oregon
+    plan: free

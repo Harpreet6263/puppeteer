@@ -1,0 +1,12 @@
+{
+  "name": "puppeteer-monitor",
+  "version": "1.0.0",
+  "main": "watchApi.js",
+  "scripts": {
+    "start": "node watchApi.js"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "puppeteer": "^24.12.1"
+  }
+}
