@@ -12,7 +12,6 @@ app.use("/screenshots", express.static(path.join(__dirname, "screenshots")));
 app.get("/", async (req, res) => {
   const browser = await puppeteer.launch({
     headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
   });
 
