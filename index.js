@@ -6,34 +6,52 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get("/", async (req, res) => {
-  console.log("📥 Received trigger to start Puppeteer");
+  try {
+    const browser = await puppeteer.launch({
+      headless: true, // stays headless on Railway
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || "/usr/bin/chromium",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"]
+    });
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium',
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
+    const page = await browser.newPage();
+    await page.setRequestInterception(true);
 
-  const page = await browser.newPage();
-  await page.setRequestInterception(true);
+    page.on("request", async (interceptedRequest) => {
+      const url = interceptedRequest.url();
+      const method = interceptedRequest.method();
 
-  page.on("request", async (reqIntercept) => {
-    if (reqIntercept.url().includes("/api/front/placebet") && reqIntercept.method() === "POST") {
-      const postData = reqIntercept.postData();
-      console.log("🔥 Intercepted placebet:", postData);
-      try {
-        await axios.post("https://your-backend/api/receive-bet", { data: postData });
-      } catch (err) {
-        console.error("❌ Error forwarding bet:", err.message);
+      if (url.includes("/api/front/placebet") && method === "POST") {
+        const postData = interceptedRequest.postData();
+        console.log("🔥 Intercepted placebet:", postData);
+
+        try {
+          await axios.post(process.env.BACKEND_URL || "https://your-backend.com/api/receive-bet", {
+            data: postData
+          });
+          console.log("📨 Forwarded payload");
+        } catch (err) {
+          console.error("❌ Forwarding error:", err.message);
+        }
       }
-    }
-    reqIntercept.continue();
-  });
 
-  await page.goto("https://www.allpanelexch.com");
-  console.log("✅ Puppeteer is watching the site");
+      interceptedRequest.continue();
+    });
 
-  res.send("✅ Puppeteer launched");
+    await page.goto("https://www.allpanelexch.com", { waitUntil: "networkidle2" });
+    console.log("✅ Login page loaded — waiting for manual login...");
+
+    res.send("✅ Puppeteer opened the login page. Please log in manually.");
+
+    // Keep browser open for 10 mins (adjust as needed)
+    setTimeout(() => {
+      browser.close();
+      console.log("🛑 Browser closed after timeout.");
+    }, 10 * 60 * 1000); // 10 minutes
+
+  } catch (error) {
+    console.error("❌ Puppeteer failed:", error);
+    res.status(500).send("❌ Failed to launch Puppeteer");
+  }
 });
 
 app.listen(PORT, () => {
